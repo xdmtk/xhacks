@@ -9,6 +9,9 @@
  * implied warranty.
  */
 
+#include "../clion_include/Xlib.h"
+#include "../clion_include/X.h"
+
 #include "screenhack.h"
 
 #ifndef HAVE_JWXYZ
@@ -33,7 +36,6 @@
  * # include <X11/bitmaps/vlines2>
  * # include <X11/bitmaps/vlines3>
 */
-
 #ifdef DO_STIPPLE
 #define stipple_width  16
 #define stipple_height 4
