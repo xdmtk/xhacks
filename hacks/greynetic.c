@@ -167,8 +167,8 @@ greynetic_draw (Display *dpy, Window window, void *closure)
 
   for (i = 0; i < 10; i++) /* minimize area, but don't try too hard */
     {
-      w = 50 + random () % (st->xlim - 50);
-      h = 50 + random () % (st->ylim - 50);
+      w = 50 + random () % (st->xlim - 25);
+      h = 50 + random () % (st->ylim - 25);
       if (w + h < st->xlim && w + h < st->ylim)
 	break;
     }
@@ -255,7 +255,7 @@ static const char *greynetic_defaults [] = {
   ".background:	black",
   ".foreground:	white",
   "*fpsSolid:	true",
-  "*delay:	10000",
+  "*delay:	10000000",
   "*grey:	false",
 #ifdef HAVE_MOBILE
   "*ignoreRotation: True",
