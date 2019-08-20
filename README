@@ -1,4 +1,16 @@
 
+    Giving credit where credit is due, the base of this repo is the work of Jamie Zawinski
+    and others ( as stated below )
+
+    I created this standalone repository to learn and experiment with XLib,
+    and to also develop new hacks for xscreensaver.
+
+    Hacks I develop will be marked as such.
+
+    -Nick
+
+===============================================================================
+
                               XScreenSaver
 
                              a collection of
