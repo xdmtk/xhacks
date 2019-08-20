@@ -9,6 +9,17 @@
 
     -Nick
 
+
+
+    P.S - A typical Linux system ( I am running on Debian Stretch ) will have just about
+    everything needed to configure and build the files in this repo. Though one library I was
+    actually missing happened to be `libglade2-0-dev`, so if you are getting compilation errors
+    related to `gdk-pixbuf`, this is probably the reason why.
+
+    I also ran `./configure` with the extra options noted in the INSTALL file
+
+    `env CPPFLAGS=-I/usr/local/include LDFLAGS=-s ./configure`
+
 ===============================================================================
 
                               XScreenSaver
