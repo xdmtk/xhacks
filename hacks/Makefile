@@ -103,7 +103,7 @@ SRCS		= attraction.c blitspin.c bouboule.c braid.c bubbles.c \
 		  fps.c goop.c starfish.c munch.c fadeplot.c \
 		  rd-bomb.c coral.c mountain.c triangle.c lissie.c worm.c \
 		  rotor.c ant.c xjack.c xlyap.c xscreensaver-sgigl.c \
-		  cynosure.c moire2.c flow.c epicycle.c interference.c \
+		  cynosure.c moire2.c fibonacci.c flow.c epicycle.c interference.c \
 		  truchet.c bsod.c crystal.c discrete.c distort.c kumppa.c \
 		  demon.c loop.c t3d.c penetrate.c deluxe.c compass.c \
 		  squiral.c xflame.c wander.c spotlight.c critical.c \
@@ -146,7 +146,7 @@ OBJS		= attraction.o blitspin.o bouboule.o braid.o bubbles.o \
 		  rotor.o ant.o xjack.o xlyap.o xscreensaver-sgigl.o \
 		  cynosure.o moire2.o flow.o epicycle.o interference.o \
 		  truchet.o bsod.o crystal.o discrete.o distort.o kumppa.o \
-		  demon.o loop.o t3d.o penetrate.o deluxe.o compass.o \
+		  demon.o loop.o t3d.o penetrate.o fibonacci.o deluxe.o compass.o \
 		  squiral.o xflame.o wander.o spotlight.o critical.o \
 		  phosphor.o xmatrix.o petri.o shadebobs.o xsublim.o ccurve.o \
 		  blaster.o bumps.o ripples.o xspirograph.o \
@@ -175,7 +175,7 @@ EXES		= attraction blitspin bouboule braid decayscreen deco \
 		  fadeplot rd-bomb coral mountain triangle \
 		  xjack xlyap cynosure moire2 flow epicycle \
 		  interference truchet bsod crystal discrete distort kumppa \
-		  demon loop penetrate deluxe compass squiral xflame \
+		  demon loop penetrate deluxe fibonacci compass squiral xflame \
 		  wander spotlight phosphor xmatrix petri shadebobs \
 		  ccurve blaster bumps ripples xspirograph \
 		  nerverot xrayswarm zoom whirlwindwarp rotzoomer \
@@ -725,6 +725,9 @@ penetrate:	penetrate.o	$(HACK_OBJS) $(COL)
 	$(CC_HACK) -o $@ $@.o	$(HACK_OBJS) $(COL) $(HACK_LIBS)
 
 deluxe:		deluxe.o	$(HACK_OBJS) $(ALP) $(COL) $(DBE)
+	$(CC_HACK) -o $@ $@.o	$(HACK_OBJS) $(ALP) $(COL) $(DBE) $(HACK_LIBS)
+
+fibonacci:		fibonacci.o	$(HACK_OBJS) $(ALP) $(COL) $(DBE)
 	$(CC_HACK) -o $@ $@.o	$(HACK_OBJS) $(ALP) $(COL) $(DBE) $(HACK_LIBS)
 
 compass:	compass.o	$(HACK_OBJS) $(DBE)
@@ -1554,6 +1557,24 @@ deco.o: $(UTILS_SRC)/visual.h
 deco.o: $(UTILS_SRC)/yarandom.h
 delaunay.o: ../config.h
 delaunay.o: $(srcdir)/delaunay.h
+
+fibonacci.o: ../config.h
+fibonacci.o: $(srcdir)/fps.h
+fibonacci.o: $(srcdir)/recanim.h
+fibonacci.o: $(srcdir)/screenhackI.h
+fibonacci.o: $(srcdir)/screenhack.h
+fibonacci.o: $(UTILS_SRC)/alpha.h
+fibonacci.o: $(UTILS_SRC)/colors.h
+fibonacci.o: $(UTILS_SRC)/font-retry.h
+fibonacci.o: $(UTILS_SRC)/grabscreen.h
+fibonacci.o: $(UTILS_SRC)/hsv.h
+fibonacci.o: $(UTILS_SRC)/resources.h
+fibonacci.o: $(UTILS_SRC)/usleep.h
+fibonacci.o: $(UTILS_SRC)/visual.h
+fibonacci.o: $(UTILS_SRC)/xdbe.h
+fibonacci.o: $(UTILS_SRC)/yarandom.h
+
+
 deluxe.o: ../config.h
 deluxe.o: $(srcdir)/fps.h
 deluxe.o: $(srcdir)/recanim.h
