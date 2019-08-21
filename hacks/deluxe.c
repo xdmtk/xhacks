@@ -8,7 +8,8 @@
  * software for any purpose.  It is provided "as is" without express or 
  * implied warranty.
  */
-
+#include "../clion_include/Xlib.h"
+#include "../clion_include/X.h"
 #include <math.h>
 #include "screenhack.h"
 #include "alpha.h"
