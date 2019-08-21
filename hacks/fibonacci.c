@@ -32,11 +32,11 @@ struct state {
   XColor *colors;
   GC erase_gc;
   XWindowAttributes xgwa;
+  unsigned long delay;
 
 };
 
 
-static void
 
 static void *
 fibonacci_init (Display *dpy, Window window)
@@ -48,7 +48,6 @@ fibonacci_init (Display *dpy, Window window)
   st->window = window;
   XGetWindowAttributes (st->dpy, st->window, &st->xgwa);
 
-  st->colors = (XColor *) calloc (sizeof(*st->colors), st->ncolors);
   return st;
 
 }
@@ -79,25 +78,16 @@ fibonacci_free (Display *dpy, Window window, void *closure)
 {
   struct state *st = (struct state *) closure;
   int i;
-  XFreeGC (dpy, st->erase_gc);
-  if (st->ba) XFreePixmap (dpy, st->ba);
-  if (st->bb) XFreePixmap (dpy, st->bb);
-  if (st->plane_masks) free (st->plane_masks);
-  for (i = 0; i < st->count; i++)
-    if (st->throbbers[i]) {
-      XFreeGC (dpy, st->throbbers[i]->gc);
-      free (st->throbbers[i]);
-    }
-  free (st->throbbers);
-  free (st->colors);
   free (st);
 }
 
 
 static const char *fibonacci_defaults [] = {
+        "*delay: 1000"
 };
 
 static XrmOptionDescRec fibonacci_options [] = {
+        { "-delay",          ".delay",       XrmoptionSepArg, 0 }
 };
 
 
