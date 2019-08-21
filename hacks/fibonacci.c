@@ -40,9 +40,6 @@ static void * fibonacci_init (Display *dpy, Window window) {
     /* Setup state variable */
     struct state *st = (struct state *) calloc (1, sizeof(*st));
 
-    /* Variable to hold properties that we can attribute the the Graphics Context ( GC ) */
-    XGCValues gcv;
-
     /* Default display given to us by Xscreensaver */
     st->dpy = dpy;
 
@@ -60,6 +57,13 @@ static void * fibonacci_init (Display *dpy, Window window) {
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
 
+    XGCValues gcv;
+    /* Variable to hold properties that we can attribute the the Graphics Context ( GC ) */
+    gcv.foreground = WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy));
+    gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
+
+    st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &gcv);
+
 
     return st;
 
@@ -69,6 +73,8 @@ static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure)
 
     struct state *st = (struct state *) closure;
     int i;
+
+
     XDrawLine(st->dpy, st->window, st->gc, 50, 50 , 50 , 50);
 
 
