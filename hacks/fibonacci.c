@@ -30,11 +30,19 @@ struct state {
     Colormap colormap;
 
     unsigned long delay;
-    int width, height;
-    int x1, y1, x2, y2, complete, ystart;
+    int width, height, square_divider;
+    int vertices[4][2];
 };
 
 
+static void square_setter(struct state *st, int w, int h) {
+    st->square_divider = min(w, h);
+    int t_vertices[4][2] = {
+            {0,0}, {st->square_divider, 0},
+            {0, st->square_divider}, {st->square_divider, st->square_divider}
+    };
+    memcpy(st->vertices, t_vertices, countof(t_vertices) );
+}
 
 static void * fibonacci_init (Display *dpy, Window window) {
 
@@ -57,6 +65,10 @@ static void * fibonacci_init (Display *dpy, Window window) {
     st->width = st->xgwa.width;
     st->height = st->xgwa.width;
 
+
+    /* Set initial vertices for first square */
+    square_setter(st, st->width, st->height);
+
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
 
@@ -66,37 +78,16 @@ static void * fibonacci_init (Display *dpy, Window window) {
     gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
 
     st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &gcv);
-    st->x1 = st->y1 = st->y2 = st->x2 = st->ystart = 0;
-
     return st;
 
 }
 
+
+
+
 static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure) {
 
     struct state *st = (struct state *) closure;
-    if (!st->complete) {
-        st->x2 += 1;
-        st->complete = st->x2 > st->width ? 1 : 0;
-    }
-    else {
-        st->y1 += 100;
-        st->y2 += 100;
-        st->x1 = st->x2 = 0;
-        st->complete = 0;
-    }
-    if (st->y1 > st->height) {
-        st->ystart += 10;
-        st->y1 = st->y2 = st->ystart;
-    }
-    XColor xcolour;
-
-    xcolour.red = random() % 65000 ; xcolour.green = random() % 65000; xcolour.blue = random() % 65000;
-    xcolour.flags = DoRed | DoGreen | DoBlue;
-    XAllocColor(st->dpy, st->colormap, &xcolour);
-
-    XSetForeground(st->dpy, st->gc, xcolour.pixel);
-    XDrawLine(st->dpy, st->window, st->gc, st->x1, st->y1, st->x2, st->y2 + (sin(st->x2) * st->height));
     return st->delay + 100;
 }
 
