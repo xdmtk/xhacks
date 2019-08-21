@@ -24,25 +24,42 @@ struct state {
     Display *dpy;
     Window window;
 
-    Bool transparent_p;
-    Bool dbuf;
     XColor *colors;
-    GC erase_gc;
+    GC gc;
     XWindowAttributes xgwa;
-    unsigned long delay;
+    Colormap colormap;
 
+    unsigned long delay;
+    int width, height;
 };
 
 
 
 static void * fibonacci_init (Display *dpy, Window window) {
 
+    /* Setup state variable */
     struct state *st = (struct state *) calloc (1, sizeof(*st));
+
+    /* Variable to hold properties that we can attribute the the Graphics Context ( GC ) */
     XGCValues gcv;
-    int i;
+
+    /* Default display given to us by Xscreensaver */
     st->dpy = dpy;
+
+    /* Default window given to us by Xscreensaver */
     st->window = window;
+
+    /* Using the window and display, we can find out all information we need about the window
+     * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
     XGetWindowAttributes (st->dpy, st->window, &st->xgwa);
+
+    /* Get the dimensions of the window */
+    st->width = st->xgwa.width;
+    st->height = st->xgwa.width;
+
+    /* Setting up the colormap. not exactly sure what this does yet */
+    st->colormap = st->xgwa.colormap;
+
 
     return st;
 
@@ -52,6 +69,12 @@ static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure)
 
     struct state *st = (struct state *) closure;
     int i;
+    XDrawLine(st->dpy, st->window, st->gc, 50, 50 , 50 , 50);
+
+
+
+
+
     return st->delay;
 }
 
