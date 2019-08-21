@@ -30,18 +30,31 @@ struct state {
     Colormap colormap;
 
     unsigned long delay;
-    int width, height, square_divider;
-    int vertices[4][2];
+    int width, height, initial_width, initial_x;
+    int init;
+    int x, y, w, h, dir;
 };
 
+static int get_initial_x(int sw, int iw) {
+   return (sw - iw)/2;
+}
 
-static void square_setter(struct state *st, int w, int h) {
-    st->square_divider = min(w, h);
-    int t_vertices[4][2] = {
-            {0,0}, {st->square_divider, 0},
-            {0, st->square_divider}, {st->square_divider, st->square_divider}
-    };
-    memcpy(st->vertices, t_vertices, countof(t_vertices) );
+static int get_initial_width(int w, int h) {
+    float fw = (float)w; float fh = (float)h;
+    for (;;) {
+        if (fw*1.618 < fh)
+            return (int)fw;
+        fw--;
+    }
+}
+
+static void random_color(struct state *st) {
+
+    XColor color;
+    color.red = random() % 35000; color.green = random() % 24000;
+    color.flags = DoRed | DoGreen | DoBlue;
+    XAllocColor(st->dpy, st->colormap, &color);
+    XSetForeground(st->dpy, st->gc, color.pixel);
 }
 
 static void * fibonacci_init (Display *dpy, Window window) {
@@ -57,6 +70,8 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
     st->delay = 100;
 
+    st->init = st->dir = 0;
+
     /* Using the window and display, we can find out all information we need about the window
      * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
     XGetWindowAttributes (st->dpy, st->window, &st->xgwa);
@@ -65,9 +80,11 @@ static void * fibonacci_init (Display *dpy, Window window) {
     st->width = st->xgwa.width;
     st->height = st->xgwa.width;
 
+    st->initial_width = get_initial_width(st->width, st->height);
+    st->initial_x = get_initial_x(st->width, st->initial_width);
+
 
     /* Set initial vertices for first square */
-    square_setter(st, st->width, st->height);
 
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
@@ -82,13 +99,64 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
 }
 
+/* 0 -> RIGHT , 1 -> DOWN , 2 -> LEFT, 3 -> UP */
+static void draw_golden_rect(struct state *st) {
+
+    char *coord_start, *coord_end;
+    switch (st->dir) {
+        case 0:
+            asprintf(&coord_start, "Start (%d, %d) - End (%d, %d) ", st->x, st->y, st->w + st->x, st->w);
+            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, coord_start, strlen(coord_start));
+            XDrawLine(st->dpy, st->window, st->gc,
+                      st->x, st->w, st->w + st->x, st->w);
+            st->dir = 1;
+            st->x += st->h - st->w;
+            st->y += st->w;
+            st->h = st->h - st->w;
+            st->w = st->w - st->h;
+            break;
+        case 1:
+            asprintf(&coord_start, "Start (%d, %d) - End (%d, %d) ", st->x, st->y, st->x, st->h + st->y);
+            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, coord_start, strlen(coord_start));
+            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, "Hi", strlen("Hi"));
+            XDrawLine(st->dpy, st->window, st->gc,
+                      st->x, st->y, st->x, st->h + st->y);
+            st->dir = 2;
+            st->y += st->w;
+            st->h = st->h - st->w;
+            st->w += st->h - st->w;
+            break;
+        case 2:
+            asprintf(&coord_start, "Start (%d, %d)", st->x, st->y);
+            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, coord_start, strlen(coord_start));
+            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, "Hi", strlen("Hi"));
+            XDrawLine(st->dpy, st->window, st->gc,
+                      st->x, st->y, st->w + st->x, st->h - st->y);
+            st->dir = 2;
+            st->y += st->w;
+            st->h = st->h - st->w;
+            st->w = st->h - st->h;
+    }
+}
+
 
 
 
 static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure) {
 
     struct state *st = (struct state *) closure;
-    return st->delay + 100;
+    random_color(st);
+    draw_variable_values(st);
+    if (!st->init) {
+        XDrawRectangle(st->dpy, st->window, st->gc, st->initial_x,
+                       0, st->initial_width, st->height);
+        st->init = !st->init;
+
+        st->x = st->initial_x; st->y = 0;
+        st->h = st->height; st->w = st->initial_width;
+    }
+    draw_golden_rect(st);
+    return st->delay + 1000000;
 }
 
 static void fibonacci_reshape (Display *dpy, Window window, void *closure,
