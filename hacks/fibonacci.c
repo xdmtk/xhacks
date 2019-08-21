@@ -31,6 +31,7 @@ struct state {
 
     unsigned long delay;
     int width, height;
+    int x1, y1, x2, y2, complete, ystart;
 };
 
 
@@ -45,6 +46,8 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
     /* Default window given to us by Xscreensaver */
     st->window = window;
+
+    st->delay = 100;
 
     /* Using the window and display, we can find out all information we need about the window
      * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
@@ -63,7 +66,7 @@ static void * fibonacci_init (Display *dpy, Window window) {
     gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
 
     st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &gcv);
-
+    st->x1 = st->y1 = st->y2 = st->x2 = st->ystart = 0;
 
     return st;
 
@@ -72,16 +75,29 @@ static void * fibonacci_init (Display *dpy, Window window) {
 static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure) {
 
     struct state *st = (struct state *) closure;
-    int i;
+    if (!st->complete) {
+        st->x2 += 1;
+        st->complete = st->x2 > st->width ? 1 : 0;
+    }
+    else {
+        st->y1 += 100;
+        st->y2 += 100;
+        st->x1 = st->x2 = 0;
+        st->complete = 0;
+    }
+    if (st->y1 > st->height) {
+        st->ystart += 10;
+        st->y1 = st->y2 = st->ystart;
+    }
+    XColor xcolour;
 
+    xcolour.red = random() % 65000 ; xcolour.green = random() % 65000; xcolour.blue = random() % 65000;
+    xcolour.flags = DoRed | DoGreen | DoBlue;
+    XAllocColor(st->dpy, st->colormap, &xcolour);
 
-    XDrawLine(st->dpy, st->window, st->gc, 50, 50 , 50 , 50);
-
-
-
-
-
-    return st->delay;
+    XSetForeground(st->dpy, st->gc, xcolour.pixel);
+    XDrawLine(st->dpy, st->window, st->gc, st->x1, st->y1, st->x2, st->y2 + (sin(st->x2) * st->height));
+    return st->delay + 100;
 }
 
 static void fibonacci_reshape (Display *dpy, Window window, void *closure,
@@ -102,7 +118,7 @@ static void fibonacci_free (Display *dpy, Window window, void *closure) {
 
 
 static const char *fibonacci_defaults [] = {
-    "*delay: 1000"
+    "*delay: 10000000"
 };
 
 static XrmOptionDescRec fibonacci_options [] = {
