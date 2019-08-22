@@ -68,6 +68,7 @@ static XColor generate_color(char * color_str) {
     color.green = (int)strtol(green_buf, NULL, 16 ) << 8;
     color.blue = (int)strtol(blue_buf, NULL, 16 ) << 8;
 
+    printf("%d %d %d\n", color.red, color.green, color.blue);
     color.flags = DoRed | DoGreen | DoBlue;
 
     return color;
@@ -75,12 +76,31 @@ static XColor generate_color(char * color_str) {
 
 static void random_color(struct state *st) {
 
-    XColor color = generate_color("7FFF00");
+    XColor color = st->colors[random() % 15];
 /*    color.red = 0x7F << 8; color.green = 0xFF << 8; color.blue = 0x0 << 8; */
     XAllocColor(st->dpy, st->colormap, &color);
     XSetForeground(st->dpy, st->gc, color.pixel);
 }
-
+static void init_colors(struct state *st) {
+    XColor xcm[15] = {
+        generate_color("FFA500"),
+        generate_color("FF0F55"),
+        generate_color("FFBBBB"),
+        generate_color("FFCBCB"),
+        generate_color("FF3320"),
+        generate_color("FFBA02"),
+        generate_color("FFBC66"),
+        generate_color("FFDBBD"),
+        generate_color("FFF000"),
+        generate_color("FD00FF"),
+        generate_color("FF0392"),
+        generate_color("FFBB03"),
+        generate_color("FF2090"),
+        generate_color("FF1203"),
+        generate_color("FF2390"),
+    };
+    st->colors = xcm;
+}
 static void * fibonacci_init (Display *dpy, Window window) {
 
     /* Setup state variable */
@@ -95,7 +115,6 @@ static void * fibonacci_init (Display *dpy, Window window) {
     st->delay = 200000;
 
     st->init = st->blackout_pause = 0;
-
 
     /* Using the window and display, we can find out all information we need about the window
      * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
@@ -118,6 +137,7 @@ static void * fibonacci_init (Display *dpy, Window window) {
     st->gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
 
     st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &st->gcv);
+    init_colors(st);
     return st;
 
 }
@@ -180,6 +200,7 @@ static int draw_golden_rect(struct state *st) {
         t_xgcv.foreground = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
         t_xgcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
         st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &t_xgcv);
+        random_color(st);
         XFillRectangle(st->dpy, st->window, st->gc, 0, 0, st->width, st->height);
         if (st->height < st->width )  {
             st->w_l_switch = 0;
@@ -200,8 +221,22 @@ static int draw_golden_rect(struct state *st) {
 
     XFillPolygon(st->dpy, st->window, st->gc,
             xp, 4, Convex, CoordModeOrigin);
-    return 1;
 
+    XSetForeground(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.ul.x, st->rect_coords.ul.y,
+              st->rect_coords.ur.x, st->rect_coords.ur.y);
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.ul.x, st->rect_coords.ul.y,
+              st->rect_coords.bl.x, st->rect_coords.bl.y);
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.br.x, st->rect_coords.br.y,
+              st->rect_coords.bl.x, st->rect_coords.bl.y);
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.br.x, st->rect_coords.br.y,
+              st->rect_coords.ur.x, st->rect_coords.ur.y);
+
+    return 1;
 }
 
 static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure) {
