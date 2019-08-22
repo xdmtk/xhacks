@@ -33,6 +33,7 @@ struct state {
     unsigned long delay;
     int width, height, initial_width, initial_x;
     int init;
+    int w_l_switch, blackout_pause;
 
     struct rect {
         XPoint ul, ur, bl, br;
@@ -51,7 +52,6 @@ static int get_initial_x(int sw, int iw) {
 static int get_initial_width(int w, int h) {
     float fw = (float)w; float fh = (float)h;
     for (;;) {
-        printf("W: %.2f H: %.2f\n", fw,fh);
         if (fw*1.618 < fh)
             return (int)fw;
         fw--;
@@ -80,7 +80,7 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
     st->delay = 200000;
 
-    st->init = 0;
+    st->init = st->blackout_pause = 0;
 
 
     /* Using the window and display, we can find out all information we need about the window
@@ -109,9 +109,11 @@ static void * fibonacci_init (Display *dpy, Window window) {
 }
 
 
-static void find_square_coords(struct rect *r, struct square *s) {
+static int find_square_coords(struct rect *r, struct square *s, int * wls) {
     /* Determine orientation of rectangle */
     if (abs(r->ul.x - r->ur.x) < abs(r->ul.y - r->bl.y))  {
+        if (*wls)
+            return 0;
         /* If our rectangle is longer than it is wide, our square
          * will have side length of the x distance, the top corners
          * can stay the same as the rectangle */
@@ -123,8 +125,11 @@ static void find_square_coords(struct rect *r, struct square *s) {
          * all we need to do is move the top of the rectangle corners
          * to the bottom of the square */
         r->ul = s->bl ; r->ur = s->br;
+        *wls = 1;
     }
     else {
+        if (!*wls)
+            return 0;
         /* If our rectangle is wider than it is long, our square
          * will have side length of the y distance, so our left corners
          * can stay the same as the rectangle */
@@ -139,14 +144,38 @@ static void find_square_coords(struct rect *r, struct square *s) {
          * rectangle, would be the moving the left corners of the rect
          * to the right corners of the square */
         r->ul = s->ur ; r->bl = s->br;
+        *wls = 0;
     }
+    return 1;
 
 }
 
 
 
-static void draw_golden_rect(struct state *st) {
-    find_square_coords(&st->rect_coords, &st->square_coords);
+static int draw_golden_rect(struct state *st) {
+    if (!find_square_coords(&st->rect_coords, &st->square_coords, &st->w_l_switch)) {
+        if (!st->blackout_pause) {
+            st->blackout_pause = !st->blackout_pause;
+            return 0;
+        }
+        st->blackout_pause = !st->blackout_pause;
+        st->initial_width = get_initial_width(st->width, st->height);
+        st->initial_x = get_initial_x(st->width, st->initial_width);
+        st->init = !st->init;
+        XGCValues t_xgcv;
+        t_xgcv.foreground = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
+        t_xgcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
+        st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &t_xgcv);
+        XFillRectangle(st->dpy, st->window, st->gc, 0, 0, st->width, st->height);
+        if (st->height < st->width )  {
+            st->w_l_switch = 0;
+        }
+        else {
+            st->w_l_switch = 1;
+        }
+        return 0;
+
+    }
     random_color(st);
     XPoint xp[] = {
             st->rect_coords.ul,
@@ -157,24 +186,7 @@ static void draw_golden_rect(struct state *st) {
 
     XFillPolygon(st->dpy, st->window, st->gc,
             xp, 4, Convex, CoordModeOrigin);
-
-    /*
-
-    XDrawLine(st->dpy, st->window, st->gc,
-            st->rect_coords.ul.x, st->rect_coords.ul.y,
-            st->rect_coords.ur.x, st->rect_coords.ur.y);
-    XDrawLine(st->dpy, st->window, st->gc,
-              st->rect_coords.ul.x, st->rect_coords.ul.y,
-              st->rect_coords.bl.x, st->rect_coords.bl.y);
-    XDrawLine(st->dpy, st->window, st->gc,
-              st->rect_coords.br.x, st->rect_coords.br.y,
-              st->rect_coords.bl.x, st->rect_coords.bl.y);
-    XDrawLine(st->dpy, st->window, st->gc,
-              st->rect_coords.br.x, st->rect_coords.br.y,
-              st->rect_coords.ur.x, st->rect_coords.ur.y);
-    */
-
-
+    return 1;
 
 }
 
@@ -202,7 +214,9 @@ static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure)
         st->init = !st->init;
 
     }
-    draw_golden_rect(st);
+    if (!draw_golden_rect(st)) {
+        return st->delay + 5000000;
+    }
     return st->delay;
 }
 
