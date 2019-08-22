@@ -260,11 +260,25 @@ static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure)
         st->rect_coords.ul = ul; st->rect_coords.ur = ur;
         st->rect_coords.bl = bl; st->rect_coords.br = br;
 
+        XSetForeground(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
+        XDrawLine(st->dpy, st->window, st->gc,
+                  st->rect_coords.ul.x, st->rect_coords.ul.y,
+                  st->rect_coords.ur.x, st->rect_coords.ur.y);
+        XDrawLine(st->dpy, st->window, st->gc,
+                  st->rect_coords.ul.x, st->rect_coords.ul.y,
+                  st->rect_coords.bl.x, st->rect_coords.bl.y);
+        XDrawLine(st->dpy, st->window, st->gc,
+                  st->rect_coords.br.x, st->rect_coords.br.y,
+                  st->rect_coords.bl.x, st->rect_coords.bl.y);
+        XDrawLine(st->dpy, st->window, st->gc,
+                  st->rect_coords.br.x, st->rect_coords.br.y,
+                  st->rect_coords.ur.x, st->rect_coords.ur.y);
+
         st->init = !st->init;
 
     }
     if (!draw_golden_rect(st)) {
-        return st->delay + 5000000;
+        return st->delay + (st->blackout_pause ? 3000000 : 200000);
     }
     return st->delay;
 }
