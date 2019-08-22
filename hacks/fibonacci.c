@@ -58,11 +58,25 @@ static int get_initial_width(int w, int h) {
     }
 }
 
+static XColor generate_color(char * color_str) {
+    XColor color; char red_buf[3]; char green_buf[3]; char blue_buf[3];
+    memcpy(red_buf, &color_str[0], 2); red_buf[2] = '\0';
+    memcpy(green_buf, &color_str[2], 2); green_buf[2] = '\0';
+    memcpy(blue_buf, &color_str[4], 2); blue_buf[2] = '\0';
+
+    color.red = (int)strtol(red_buf, NULL, 16 ) << 8;
+    color.green = (int)strtol(green_buf, NULL, 16 ) << 8;
+    color.blue = (int)strtol(blue_buf, NULL, 16 ) << 8;
+
+    color.flags = DoRed | DoGreen | DoBlue;
+
+    return color;
+}
+
 static void random_color(struct state *st) {
 
-    XColor color;
-    color.red = random() % 35000; color.green = random() % 24000;
-    color.flags = DoRed | DoGreen | DoBlue;
+    XColor color = generate_color("7FFF00");
+/*    color.red = 0x7F << 8; color.green = 0xFF << 8; color.blue = 0x0 << 8; */
     XAllocColor(st->dpy, st->colormap, &color);
     XSetForeground(st->dpy, st->gc, color.pixel);
 }
