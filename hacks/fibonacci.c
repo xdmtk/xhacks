@@ -51,7 +51,7 @@ static int get_initial_x(int sw, int iw) {
 static int get_initial_width(int w, int h) {
     float fw = (float)w; float fh = (float)h;
     for (;;) {
-        printf("%.2f\n", fw);
+        printf("W: %.2f H: %.2f\n", fw,fh);
         if (fw*1.618 < fh)
             return (int)fw;
         fw--;
@@ -82,13 +82,14 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
     st->init = 0;
 
+
     /* Using the window and display, we can find out all information we need about the window
      * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
     XGetWindowAttributes (st->dpy, st->window, &st->xgwa);
 
     /* Get the dimensions of the window */
     st->width = st->xgwa.width;
-    st->height = st->xgwa.width;
+    st->height = st->xgwa.height;
 
     st->initial_width = get_initial_width(st->width, st->height);
     st->initial_x = get_initial_x(st->width, st->initial_width);
