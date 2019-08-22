@@ -24,7 +24,7 @@ struct state {
     Display *dpy;
     Window window;
 
-    XColor *colors;
+    XColor *colors, last_color;
     GC gc;
     XWindowAttributes xgwa;
     Colormap colormap;
@@ -76,7 +76,15 @@ static XColor generate_color(char * color_str) {
 
 static void random_color(struct state *st) {
 
-    XColor color = st->colors[random() % 15];
+    XColor color;
+    while (1) {
+        color = st->colors[random() % 15];
+        if (st->last_color.red != color.red
+            || st->last_color.blue != color.blue
+            || st->last_color.green != color.green) {
+            break;
+        }
+    }
 /*    color.red = 0x7F << 8; color.green = 0xFF << 8; color.blue = 0x0 << 8; */
     XAllocColor(st->dpy, st->colormap, &color);
     XSetForeground(st->dpy, st->gc, color.pixel);
