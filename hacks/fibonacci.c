@@ -32,7 +32,15 @@ struct state {
     unsigned long delay;
     int width, height, initial_width, initial_x;
     int init;
-    int x, y, w, h, dir;
+
+    struct rect {
+        XPoint ul, ur, bl, br;
+    } rect_coords;
+
+    struct square {
+        XPoint ul, ur, bl, br;
+    } square_coords;
+
 };
 
 static int get_initial_x(int sw, int iw) {
@@ -71,7 +79,7 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
     st->delay = 100;
 
-    st->init = st->dir = 0;
+    st->init = 0;
 
     /* Using the window and display, we can find out all information we need about the window
      * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
@@ -99,60 +107,75 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
 }
 
-/* 0 -> RIGHT , 1 -> DOWN , 2 -> LEFT, 3 -> UP */
-static void draw_golden_rect(struct state *st) {
 
-    char *coord_start, *coord_end;
-    switch (st->dir) {
-        case 0:
-            asprintf(&coord_start, "Start (%d, %d) - End (%d, %d) ", st->x, st->y, st->w + st->x, st->w);
-            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, coord_start, strlen(coord_start));
-            XDrawLine(st->dpy, st->window, st->gc,
-                      st->x, st->w, st->w + st->x, st->w);
-            st->dir = 1;
-            st->x += st->h - st->w;
-            st->y += st->w;
-            st->h = st->h - st->w;
-            st->w = st->w - st->h;
-            break;
-        case 1:
-            asprintf(&coord_start, "Start (%d, %d) - End (%d, %d) ", st->x, st->y, st->x, st->h + st->y);
-            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, coord_start, strlen(coord_start));
-            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, "Hi", strlen("Hi"));
-            XDrawLine(st->dpy, st->window, st->gc,
-                      st->x, st->y, st->x, st->h + st->y);
-            st->dir = 2;
-            st->y += st->w;
-            st->h = st->h - st->w;
-            st->w += st->h - st->w;
-            break;
-        case 2:
-            asprintf(&coord_start, "Start (%d, %d)", st->x, st->y);
-            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, coord_start, strlen(coord_start));
-            XDrawString(st->dpy, st->window, st->gc, st->x, st->y, "Hi", strlen("Hi"));
-            XDrawLine(st->dpy, st->window, st->gc,
-                      st->x, st->y, st->w + st->x, st->h - st->y);
-            st->dir = 2;
-            st->y += st->w;
-            st->h = st->h - st->w;
-            st->w = st->h - st->h;
+static void find_square_coords(struct rect r, struct square s) {
+    /* Determine orientation of rectangle */
+    if (abs(r.ul.x - r.ur.x) < abs(r.ul.y - r.bl.y))  {
+        /* If our rectangle is longer than it is wide, our square
+         * will have side length of the x distance, the top corners
+         * can stay the same as the rectangle */
+        s.ul = r.ul; s.ur = r.ur;
+        s.bl.x = r.bl.x; s.bl.y = r.ul.y + abs(r.ul.x - r.ur.x);
+        s.br.x = r.br.x; s.br.y = s.bl.y;
+
+        /* Now we need to find the new rectangle, which in this case
+         * all we need to do is move the top of the rectangle corners
+         * to the bottom of the square */
+        r.ul = s.bl ; r.ur = s.ur;
     }
+    else {
+        /* If our rectangle is wider than it is long, our square
+         * will have side length of the y distance, so our left corners
+         * can stay the same as the rectangle */
+        s.ul = r.ul ; s.bl = r.bl;
+
+        /* But our right corners need to be moved the y distance of
+         * the rectangle */
+        s.ur.y = r.ur.y ; s.ur.x = s.ul.x + abs(r.ul.y - r.bl.y);
+        s.br.y = r.br.y ; s.br.x = s.ur.x;
+
+        /* Now we need to find the new rectangle, which for a wide
+         * rectangle, would be the moving the left corners of the rect
+         * to the right corners of the square */
+        r.ul.y = s.bl.y ; r.ur.y = s.ur.y;
+    }
+
 }
 
 
 
+static void draw_golden_rect(struct state *st) {
+    find_square_coords(st->rect_coords, st->square_coords);
+    XDrawRectangle(st->dpy, st->window, st->gc, st->rect_coords.ul.x,
+            st->rect_coords.ul.y,
+            abs(st->rect_coords.ul.x - st->rect_coords.ur.x),
+            abs(st->rect_coords.ul.y - st->rect_coords.bl.y));
+
+}
 
 static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure) {
 
     struct state *st = (struct state *) closure;
     random_color(st);
     if (!st->init) {
-        XDrawRectangle(st->dpy, st->window, st->gc, st->initial_x,
+
+        /* Draw the first rectangle */
+        XFillRectangle(st->dpy, st->window, st->gc, st->initial_x,
                        0, st->initial_width, st->height);
+
+        /* Make Xpoints from the given coordinates */
+        XPoint ul; ul.x = st->initial_x; ul.y = 0;
+        XPoint ur; ur.x = st->initial_x + st->initial_width; ur.y = 0;
+        XPoint bl; bl.x = st->initial_x; bl.y = st->height;
+        XPoint br; br.x = st->initial_x + st->initial_width; br.y = st->height;
+
+        /* Set the coordinates of the first rectangle and use it to find the
+         square */
+        st->rect_coords.ul = ul; st->rect_coords.ur = ur;
+        st->rect_coords.bl = bl; st->rect_coords.br = br;
+
         st->init = !st->init;
 
-        st->x = st->initial_x; st->y = 0;
-        st->h = st->height; st->w = st->initial_width;
     }
     draw_golden_rect(st);
     return st->delay + 1000000;
