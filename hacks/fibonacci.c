@@ -28,6 +28,7 @@ struct state {
     GC gc;
     XWindowAttributes xgwa;
     Colormap colormap;
+    XGCValues gcv;
 
     unsigned long delay;
     int width, height, initial_width, initial_x;
@@ -70,14 +71,13 @@ static void * fibonacci_init (Display *dpy, Window window) {
     /* Setup state variable */
     struct state *st = (struct state *) calloc (1, sizeof(*st));
 
-    XGCValues gcv;
     /* Default display given to us by Xscreensaver */
     st->dpy = dpy;
 
     /* Default window given to us by Xscreensaver */
     st->window = window;
 
-    st->delay = 100;
+    st->delay = 10000000;
 
     st->init = 0;
 
@@ -97,47 +97,48 @@ static void * fibonacci_init (Display *dpy, Window window) {
 
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
-
     /* Variable to hold properties that we can attribute the the Graphics Context ( GC ) */
-    gcv.foreground = WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy));
-    gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
+    st->gcv.foreground = WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy));
+    st->gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
 
-    st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &gcv);
+    st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &st->gcv);
     return st;
 
 }
 
 
-static void find_square_coords(struct rect r, struct square s) {
+static void find_square_coords(struct rect *r, struct square *s) {
     /* Determine orientation of rectangle */
-    if (abs(r.ul.x - r.ur.x) < abs(r.ul.y - r.bl.y))  {
+    if (abs(r->ul.x - r->ur.x) < abs(r->ul.y - r->bl.y))  {
+        printf("Longer\n");
         /* If our rectangle is longer than it is wide, our square
          * will have side length of the x distance, the top corners
          * can stay the same as the rectangle */
-        s.ul = r.ul; s.ur = r.ur;
-        s.bl.x = r.bl.x; s.bl.y = r.ul.y + abs(r.ul.x - r.ur.x);
-        s.br.x = r.br.x; s.br.y = s.bl.y;
+        s->ul = r->ul; s->ur = r->ur;
+        s->bl.x = r->bl.x; s->bl.y = r->ul.y + abs(r->ul.x - r->ur.x);
+        s->br.x = r->br.x; s->br.y = s->bl.y;
 
         /* Now we need to find the new rectangle, which in this case
          * all we need to do is move the top of the rectangle corners
          * to the bottom of the square */
-        r.ul = s.bl ; r.ur = s.ur;
+        r->ul = s->bl ; r->ur = s->br;
     }
     else {
+        printf("Wider\n");
         /* If our rectangle is wider than it is long, our square
          * will have side length of the y distance, so our left corners
          * can stay the same as the rectangle */
-        s.ul = r.ul ; s.bl = r.bl;
+        s->ul = r->ul ; s->bl = r->bl;
 
         /* But our right corners need to be moved the y distance of
          * the rectangle */
-        s.ur.y = r.ur.y ; s.ur.x = s.ul.x + abs(r.ul.y - r.bl.y);
-        s.br.y = r.br.y ; s.br.x = s.ur.x;
+        s->ur.y = r->ur.y ; s->ur.x = s->ul.x + abs(r->ul.y - r->bl.y);
+        s->br.y = r->br.y ; s->br.x = s->ur.x;
 
         /* Now we need to find the new rectangle, which for a wide
          * rectangle, would be the moving the left corners of the rect
          * to the right corners of the square */
-        r.ul.y = s.bl.y ; r.ur.y = s.ur.y;
+        r->ul = s->ur ; r->bl = s->br;
     }
 
 }
@@ -145,11 +146,51 @@ static void find_square_coords(struct rect r, struct square s) {
 
 
 static void draw_golden_rect(struct state *st) {
-    find_square_coords(st->rect_coords, st->square_coords);
-    XDrawRectangle(st->dpy, st->window, st->gc, st->rect_coords.ul.x,
-            st->rect_coords.ul.y,
-            abs(st->rect_coords.ul.x - st->rect_coords.ur.x),
-            abs(st->rect_coords.ul.y - st->rect_coords.bl.y));
+    find_square_coords(&st->rect_coords, &st->square_coords);
+    printf("Rectangle:\n"
+            "UL: (%d,%d)\n"
+            "UR: (%d,%d)\n"
+            "BL: (%d,%d)\n"
+            "BR: (%d,%d)\n"
+            "Square:\n"
+            "UL: (%d,%d)\n"
+            "UR: (%d,%d)\n"
+            "BL: (%d,%d)\n"
+            "BR: (%d,%d)\n",
+           st->rect_coords.ul.x,
+           st->rect_coords.ul.y,
+           st->rect_coords.ur.x,
+           st->rect_coords.ur.y,
+           st->rect_coords.bl.x,
+           st->rect_coords.bl.y,
+           st->rect_coords.br.x,
+           st->rect_coords.br.y,
+
+           st->square_coords.ul.x,
+           st->square_coords.ul.y,
+           st->square_coords.ur.x,
+           st->square_coords.ur.y,
+           st->square_coords.bl.x,
+           st->square_coords.bl.y,
+           st->square_coords.br.x,
+           st->square_coords.br.y
+    );
+    st->gcv.line_width = 5;
+    st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground | GCLineWidth, &st->gcv);
+    random_color(st);
+
+    XDrawLine(st->dpy, st->window, st->gc,
+            st->rect_coords.ul.x, st->rect_coords.ul.y,
+            st->rect_coords.ur.x, st->rect_coords.ur.y);
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.ul.x, st->rect_coords.ul.y,
+              st->rect_coords.bl.x, st->rect_coords.bl.y);
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.br.x, st->rect_coords.br.y,
+              st->rect_coords.bl.x, st->rect_coords.bl.y);
+    XDrawLine(st->dpy, st->window, st->gc,
+              st->rect_coords.br.x, st->rect_coords.br.y,
+              st->rect_coords.ur.x, st->rect_coords.ur.y);
 
 }
 
@@ -178,7 +219,7 @@ static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure)
 
     }
     draw_golden_rect(st);
-    return st->delay + 1000000;
+    return st->delay;
 }
 
 static void fibonacci_reshape (Display *dpy, Window window, void *closure,
