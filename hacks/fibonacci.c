@@ -51,6 +51,7 @@ static int get_initial_x(int sw, int iw) {
 static int get_initial_width(int w, int h) {
     float fw = (float)w; float fh = (float)h;
     for (;;) {
+        printf("%.2f\n", fw);
         if (fw*1.618 < fh)
             return (int)fw;
         fw--;
@@ -77,7 +78,7 @@ static void * fibonacci_init (Display *dpy, Window window) {
     /* Default window given to us by Xscreensaver */
     st->window = window;
 
-    st->delay = 10000000;
+    st->delay = 200000;
 
     st->init = 0;
 
@@ -110,7 +111,6 @@ static void * fibonacci_init (Display *dpy, Window window) {
 static void find_square_coords(struct rect *r, struct square *s) {
     /* Determine orientation of rectangle */
     if (abs(r->ul.x - r->ur.x) < abs(r->ul.y - r->bl.y))  {
-        printf("Longer\n");
         /* If our rectangle is longer than it is wide, our square
          * will have side length of the x distance, the top corners
          * can stay the same as the rectangle */
@@ -124,7 +124,6 @@ static void find_square_coords(struct rect *r, struct square *s) {
         r->ul = s->bl ; r->ur = s->br;
     }
     else {
-        printf("Wider\n");
         /* If our rectangle is wider than it is long, our square
          * will have side length of the y distance, so our left corners
          * can stay the same as the rectangle */
@@ -147,37 +146,18 @@ static void find_square_coords(struct rect *r, struct square *s) {
 
 static void draw_golden_rect(struct state *st) {
     find_square_coords(&st->rect_coords, &st->square_coords);
-    printf("Rectangle:\n"
-            "UL: (%d,%d)\n"
-            "UR: (%d,%d)\n"
-            "BL: (%d,%d)\n"
-            "BR: (%d,%d)\n"
-            "Square:\n"
-            "UL: (%d,%d)\n"
-            "UR: (%d,%d)\n"
-            "BL: (%d,%d)\n"
-            "BR: (%d,%d)\n",
-           st->rect_coords.ul.x,
-           st->rect_coords.ul.y,
-           st->rect_coords.ur.x,
-           st->rect_coords.ur.y,
-           st->rect_coords.bl.x,
-           st->rect_coords.bl.y,
-           st->rect_coords.br.x,
-           st->rect_coords.br.y,
-
-           st->square_coords.ul.x,
-           st->square_coords.ul.y,
-           st->square_coords.ur.x,
-           st->square_coords.ur.y,
-           st->square_coords.bl.x,
-           st->square_coords.bl.y,
-           st->square_coords.br.x,
-           st->square_coords.br.y
-    );
-    st->gcv.line_width = 5;
-    st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground | GCLineWidth, &st->gcv);
     random_color(st);
+    XPoint xp[] = {
+            st->rect_coords.ul,
+            st->rect_coords.ur,
+            st->rect_coords.br,
+            st->rect_coords.bl
+    };
+
+    XFillPolygon(st->dpy, st->window, st->gc,
+            xp, 4, Convex, CoordModeOrigin);
+
+    /*
 
     XDrawLine(st->dpy, st->window, st->gc,
             st->rect_coords.ul.x, st->rect_coords.ul.y,
@@ -191,6 +171,9 @@ static void draw_golden_rect(struct state *st) {
     XDrawLine(st->dpy, st->window, st->gc,
               st->rect_coords.br.x, st->rect_coords.br.y,
               st->rect_coords.ur.x, st->rect_coords.ur.y);
+    */
+
+
 
 }
 
