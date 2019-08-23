@@ -118,7 +118,7 @@ SRCS		= attraction.c blitspin.c bouboule.c braid.c bubbles.c \
 		  apple2-main.c analogtv.c analogtv-cli.c xanalogtv.c pong.c \
 		  filmleader.c wormhole.c pacman.c pacman_ai.c pacman_level.c \
 		  fuzzyflakes.c anemotaxis.c memscroller.c substrate.c \
-		  intermomentary.c fireworkx.c fiberlamp.c \
+		  intermomentary.c fireworkx.c fibonacci.c fiberlamp.c \
 		  boxfit.c interaggregate.c celtic.c cwaves.c m6502.c \
 		  asm6502.c abstractile.c lcdscrub.c hexadrop.c \
 		  tessellimage.c delaunay.c recanim.c binaryring.c \
@@ -160,7 +160,7 @@ OBJS		= attraction.o blitspin.o bouboule.o braid.o bubbles.o \
 		  xanalogtv.o pong.o filmleader.o wormhole.o pacman.o \
 		  pacman_ai.o pacman_level.o fuzzyflakes.o anemotaxis.o \
 		  memscroller.o substrate.o intermomentary.o fireworkx.o \
-		  fiberlamp.o boxfit.o interaggregate.o celtic.o cwaves.o \
+		  fiberlamp.o fibonacci.o boxfit.o interaggregate.o celtic.o cwaves.o \
 		  webcollage-cocoa.o webcollage-helper-cocoa.o m6502.o \
 		  asm6502.o abstractile.o lcdscrub.o hexadrop.o \
 		  tessellimage.o delaunay.o recanim.o binaryring.o \
@@ -184,7 +184,7 @@ EXES		= attraction blitspin bouboule braid decayscreen deco \
 		  metaballs eruption popsquares barcode piecewise cloudlife \
 		  fontglide apple2 xanalogtv pong filmleader wormhole \
 		  pacman fuzzyflakes anemotaxis memscroller substrate \
-		  intermomentary fireworkx fiberlamp boxfit interaggregate \
+		  intermomentary fireworkx fibonacci fiberlamp boxfit interaggregate \
 		  celtic cwaves m6502 abstractile lcdscrub hexadrop \
 		  tessellimage binaryring glitchpeg vfeedback \
 		  @JPEG_EXES@
@@ -242,7 +242,7 @@ MEN		= anemone.man apollonian.man attraction.man \
 		  fontglide.man apple2.man xanalogtv.man filmleader.man \
 		  pong.man wormhole.man pacman.man fuzzyflakes.man \
 		  anemotaxis.man memscroller.man substrate.man \
-		  intermomentary.man fireworkx.man fiberlamp.man boxfit.man \
+		  intermomentary.man fireworkx.man fibonacci.man fiberlamp.man boxfit.man \
 		  interaggregate.man celtic.man cwaves.man abstractile.man \
 		  lcdscrub.man hexadrop.man tessellimage.man binaryring.man \
 		  glitchpeg.man vfeedback.man
@@ -1030,6 +1030,9 @@ pacman:		pacman.o 	$(PACOBJS) $(XLOCK_OBJS) $(PNG)
 fiberlamp:	fiberlamp.o	$(XLOCK_OBJS)
 	$(CC_HACK) -o $@ $@.o	$(XLOCK_OBJS) $(HACK_LIBS)
 
+fibonacci:	fibonacci.o	$(XLOCK_OBJS)
+	$(CC_HACK) -o $@ $@.o	$(XLOCK_OBJS) $(HACK_LIBS)
+
 # These are not like the others.
 #
 xsublim:	xsublim.o	$(HACK_OBJS_1)
@@ -1701,6 +1704,21 @@ fiberlamp.o: $(UTILS_SRC)/visual.h
 fiberlamp.o: $(UTILS_SRC)/yarandom.h
 fiberlamp.o: $(srcdir)/xlockmoreI.h
 fiberlamp.o: $(srcdir)/xlockmore.h
+fibonacci.o: ../config.h
+fibonacci.o: $(srcdir)/fps.h
+fibonacci.o: $(srcdir)/recanim.h
+fibonacci.o: $(srcdir)/screenhackI.h
+fibonacci.o: $(UTILS_SRC)/colors.h
+fibonacci.o: $(UTILS_SRC)/erase.h
+fibonacci.o: $(UTILS_SRC)/font-retry.h
+fibonacci.o: $(UTILS_SRC)/grabscreen.h
+fibonacci.o: $(UTILS_SRC)/hsv.h
+fibonacci.o: $(UTILS_SRC)/resources.h
+fibonacci.o: $(UTILS_SRC)/usleep.h
+fibonacci.o: $(UTILS_SRC)/visual.h
+fibonacci.o: $(UTILS_SRC)/yarandom.h
+fibonacci.o: $(srcdir)/xlockmoreI.h
+fibonacci.o: $(srcdir)/xlockmore.h
 filmleader.o: $(srcdir)/analogtv.h
 filmleader.o: ../config.h
 filmleader.o: $(srcdir)/fps.h
