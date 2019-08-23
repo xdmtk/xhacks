@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<screensaver name="fibonacci" _label="Fibonacci">
+
+  <command arg="-root"/>
+
+  <video href="https://www.youtube.com/watch?v=pouNo6sULTY"/>
+
+  <xscreensaver-text />
+  <boolean id="showfps" _label="Show frame rate" arg-set="-fps"/>
+
+  <xscreensaver-updater />
+
+  <_description>
+A very simple screensaver generating a set of colorful golden rectangles.
+Written by Nick Martinez, 2019.
+  </_description>
+</screensaver>
