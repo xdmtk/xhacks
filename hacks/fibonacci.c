@@ -78,10 +78,16 @@ static void random_color(struct state *st) {
 
     XColor color;
     while (1) {
-        color = st->colors[random() % 15];
+        color.red = random() % 64000;
+
+        color.green = random() % 64000;
+        color.blue = random() % 64000 ;
         if (st->last_color.red != color.red
             || st->last_color.blue != color.blue
             || st->last_color.green != color.green) {
+            st->last_color.red = color.red;
+            st->last_color.blue = color.blue;
+            st->last_color.green = color.green;
             break;
         }
     }
@@ -293,7 +299,17 @@ static unsigned long fibonacci_draw (Display *dpy, Window window, void *closure)
 
 static void fibonacci_reshape (Display *dpy, Window window, void *closure,
         unsigned int w, unsigned int h) {
+    struct state *st = (struct state * ) closure;
+    /* Using the window and display, we can find out all information we need about the window
+     * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
+    XGetWindowAttributes (st->dpy, st->window, &st->xgwa);
 
+    /* Get the dimensions of the window */
+    st->width = st->xgwa.width;
+    st->height = st->xgwa.height;
+
+    st->initial_width = get_initial_width(st->width, st->height);
+    st->initial_x = get_initial_x(st->width, st->initial_width);
     return;
 }
 
