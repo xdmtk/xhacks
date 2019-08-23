@@ -38,6 +38,7 @@ $ eruption	:== $'mydir'eruption
 $ euler2d	:== $'mydir'euler2d
 $ fadeplot	:== $'mydir'fadeplot
 $ fiberlamp	:== $'mydir'fiberlamp
+$ fibonacci :== $'mydir'fibonacci
 $ filmleader	:== $'mydir'filmleader
 $ fireworkx	:== $'mydir'fireworkx
 $ flame		:== $'mydir'flame
