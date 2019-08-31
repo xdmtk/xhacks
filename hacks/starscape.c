@@ -16,9 +16,11 @@
 #include "../clion_include/X.h"
 #include "../clion_include/Xlib.h"
 
+#define DBG 1
 #define max(a,b) (a>b?a:b)
 #define countof(x) (sizeof(x)/sizeof(*(x)))
 #define ABS(x) ((x)<0?-(x):(x))
+#define toradians(x) ((x * (M_PI/180)))
 struct origin_field{
     XPoint ul, ur, bl, br;
 };
@@ -66,13 +68,16 @@ static int get_brightness_from_origin(struct state * st, int x, int y) {
 }
 
 static int get_direction_from_origin(struct state * st, int x, int y) {
-    return 90;
+    double slope = (double)(y - st->center_screen.y)/(x - st->center_screen.x);
+    printf("(%d, %d) - Slope: %d\n", x, y, atan(slope));
+    return (-1)*(int)atan(slope);
+
 }
 
 static void generate_initial_stars(struct state * st) {
 
     /* Generate an initial set of stars and place them in the origin field */
-    int i, initial_stars = random() % 100; st->star_count = initial_stars;
+    int i, initial_stars = random() % 10; st->star_count = initial_stars;
     st->stars = (struct star *) malloc(sizeof(struct star)*initial_stars);
     assert(st->stars);
 
@@ -85,6 +90,7 @@ static void generate_initial_stars(struct state * st) {
             if (s.location.y < st->origin.ul.y)
                 s.location.y = random() % st->origin.bl.y;
         }
+        printf("For star #%d: ", i);
         s.direction = get_direction_from_origin(st, s.location.x, s.location.y);
         s.brightness = get_brightness_from_origin(st, s.location.x, s.location.y);
         s.speed = s.brightness; /* Speed is proportional to brightness ( brighter stars will move faster ) */
@@ -102,7 +108,7 @@ static void * starscape_init (Display *dpy, Window window) {
     /* Default window given to us by Xscreensaver */
     st->window = window;
 
-    st->delay = 200000;
+    st->delay = 60000;
 
     /* Using the window and display, we can find out all information we need about the window
      * we are going to draw on, and set it in xgwa ( x get window attributes) ) */
@@ -114,6 +120,8 @@ static void * starscape_init (Display *dpy, Window window) {
     st->window_h = st->xgwa.height;
 
     st->center_screen.x = st->window_w/2; st->center_screen.y = st->window_h/2;
+
+
     init_origin(st);
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
@@ -122,6 +130,7 @@ static void * starscape_init (Display *dpy, Window window) {
     st->gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
 
     st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &st->gcv);
+
     generate_initial_stars(st);
     return st;
 }
@@ -129,21 +138,33 @@ static void * starscape_init (Display *dpy, Window window) {
 static void move_stars(struct state * st) {
 
     int i;
+
+    XSetForeground(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
+    XFillRectangle(st->dpy, st->window, st->gc, 0,0,st->window_w, st->window_h);
     for (i = 0; i < st->star_count; ++i) {
-        XDrawPoint(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)), st->stars[i].location.x,
-                st->stars[i].location.y);
-        st->stars[i].location.x += cos(st->stars[i].direction)*3;
-        st->stars[i].location.y += sin(st->stars[i].direction)*3;
+        /*
+        st->stars[i].location.x += cos(toradians(st->stars[i].direction))*3;
+        st->stars[i].location.y += sin(toradians(st->stars[i].direction))*3;
+        printf("Star #%d: (%d,%d)\n", i, st->stars[i].location.x, st->stars->location.y);
+         */
     }
 }
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
     struct state *st = (struct state *) closure;
     int i;
-    XSetForeground(st->dpy, st->gc, WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
+    char buf[] = {'\0', '\0','\0'};
     move_stars(st);
-    for (i = 0; i < st->star_count; ++i)
-        XDrawPoint(st->dpy, st->window, st->gc, st->stars[i].location.x, st->stars[i].location.y);
+    XSetForeground(st->dpy, st->gc, WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
+    for (i = 0; i < st->star_count; ++i) {
+        sprintf(buf, "%d", i);
+        XDrawString(st->dpy, st->window, st->gc, st->stars[i].location.x, st->stars[i].location.y, buf, 1 );
+    }
+#ifdef DBG
+    XSetForeground(st->dpy, st->gc, WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
+    XDrawLine(st->dpy, st->window, st->gc, 0, st->center_screen.y, st->window_w, st->center_screen.y);
+    XDrawLine(st->dpy, st->window, st->gc, st->center_screen.x, 0, st->center_screen.x, st->window_h);
+#endif
 
     return st->delay;
 }
