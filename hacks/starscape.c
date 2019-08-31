@@ -27,8 +27,8 @@ struct origin_field{
 
 struct star {
     XPoint location;
-    int brightness, speed;
-    double direction;
+    int brightness;
+    double direction, speed;
 };
 
 struct state {
@@ -50,10 +50,10 @@ struct state {
 static void init_origin(struct state * st) {
 
     /* Setup a square field in the center of the screen as origin for star generation */
-    st->origin.ul.y = st->origin.ur.y = (st->window_h/2)-(int)(st->window_h*.25);
-    st->origin.bl.y = st->origin.br.y = (st->window_h/2)+(int)(st->window_h*.25);
-    st->origin.ul.x = st->origin.bl.x = (st->window_w/2)-(int)(st->window_w*.25);
-    st->origin.ur.x = st->origin.br.x = (st->window_w/2)+(int)(st->window_w*.25);
+    st->origin.ul.y = st->origin.ur.y = (st->window_h/2)-(int)(st->window_h*.35);
+    st->origin.bl.y = st->origin.br.y = (st->window_h/2)+(int)(st->window_h*.35);
+    st->origin.ul.x = st->origin.bl.x = (st->window_w/2)-(int)(st->window_w*.35);
+    st->origin.ur.x = st->origin.br.x = (st->window_w/2)+(int)(st->window_w*.35);
 }
 
 static int get_brightness_from_origin(struct state * st, int x, int y) {
@@ -62,11 +62,10 @@ static int get_brightness_from_origin(struct state * st, int x, int y) {
      * offset, and multiply it against the 256 alpha value to get our brightness
      * The closer to the origin, the darker the star */
     int max_distance = max(ABS(x - st->center_screen.x), ABS(y - st->center_screen.y));
-
     if (ABS(x - st->center_screen.x) > ABS(y - st->center_screen.y)) {
-        return (int)(max_distance/st->center_screen.x)*256;
+        return ((double)max_distance/(double)st->center_screen.x)*256.0;
     }
-    return (int)(max_distance/st->center_screen.y)*256;
+    return ((double)max_distance/(double)st->center_screen.y)*256.0;
 }
 
 static double get_direction_from_origin(struct state * st, int x, int y) {
@@ -93,7 +92,7 @@ static void generate_initial_stars(struct state * st) {
         }
         s.direction = get_direction_from_origin(st, s.location.x, s.location.y);
         s.brightness = get_brightness_from_origin(st, s.location.x, s.location.y);
-        s.speed = s.brightness; /* Speed is proportional to brightness ( brighter stars will move faster ) */
+        s.speed = 5.0*(double)((double)s.brightness/256.0); /* Speed is proportional to brightness ( brighter stars will move faster ) */
         st->stars[i] = s;
     }
 }
@@ -136,13 +135,23 @@ static void * starscape_init (Display *dpy, Window window) {
 
 static void move_stars(struct state * st) {
 
-    int i;
+    int i, new_x, new_y, divisor;
 
     XSetForeground(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
     XFillRectangle(st->dpy, st->window, st->gc, 0,0,st->window_w, st->window_h);
     for (i = 0; i < st->star_count; ++i) {
-        st->stars[i].location.x -= cos(st->stars[i].direction)*(st->stars[i].location.x > st->center_screen.x ? -5 : 5);
-        st->stars[i].location.y -= sin(st->stars[i].direction)*(st->stars[i].location.x > st->center_screen.x ? -5 : 5);
+        new_x = cos(st->stars[i].direction)*st->stars[i].speed*(st->stars[i].location.x > st->center_screen.x ? -1 : 1);
+        new_y = sin(st->stars[i].direction)*st->stars[i].speed*(st->stars[i].location.x > st->center_screen.x ? -1 : 1);
+        divisor = (st->stars[i].location.x > st->center_screen.x ? -1 : 1);
+        new_x = (new_x == 0 ? (1*divisor) : new_x);
+        new_y = (new_y == 0 ? (1*divisor) : new_y);
+        /*
+        st->stars[i].location.x -= cos(st->stars[i].direction)*st->stars[i].speed*(st->stars[i].location.x > st->center_screen.x ? -1 : 1);
+        st->stars[i].location.y -= sin(st->stars[i].direction)*st->stars[i].speed*(st->stars[i].location.x > st->center_screen.x ? -1 : 1);
+         */
+        st->stars[i].location.x -= new_x;
+        st->stars[i].location.y -= new_y;
+        st->stars[i].speed = 5.0*(double)((double)get_brightness_from_origin(st, st->stars[i].location.x, st->stars[i].location.y)/256.0);
     }
 }
 
