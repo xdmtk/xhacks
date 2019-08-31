@@ -21,13 +21,15 @@
 #define countof(x) (sizeof(x)/sizeof(*(x)))
 #define ABS(x) ((x)<0?-(x):(x))
 #define toradians(x) ((x * (M_PI/180)))
+#define todegrees(x) ((x * (180/M_PI)))
 struct origin_field{
     XPoint ul, ur, bl, br;
 };
 
 struct star {
     XPoint location;
-    int direction, brightness, speed;
+    int brightness, speed;
+    double direction;
 };
 
 struct state {
@@ -61,16 +63,19 @@ static int get_brightness_from_origin(struct state * st, int x, int y) {
      * offset, and multiply it against the 256 alpha value to get our brightness
      * The closer to the origin, the darker the star */
     int max_distance = max(ABS(x - st->center_screen.x), ABS(y - st->center_screen.y));
+
     if (ABS(x - st->center_screen.x) > ABS(y - st->center_screen.y)) {
         return (int)(max_distance/st->center_screen.x)*256;
     }
     return (int)(max_distance/st->center_screen.y)*256;
 }
 
-static int get_direction_from_origin(struct state * st, int x, int y) {
-    double slope = (double)(y - st->center_screen.y)/(x - st->center_screen.x);
-    printf("(%d, %d) - Slope: %d\n", x, y, atan(slope));
-    return (-1)*(int)atan(slope);
+static double get_direction_from_origin(struct state * st, int x, int y) {
+    double slope = (double)(y - st->center_screen.y)/(double)(x - st->center_screen.x);
+    printf("(%d, %d) - Slope: %f - Angle: %f - Center is at (%d, %d) \n", x, y, slope, atan(slope), st->center_screen.x, st->center_screen.y);
+    printf("center y: %d\n", st->center_screen.y);
+    printf("center x: %d\n", st->center_screen.x);
+    return atan(slope);
 
 }
 
@@ -118,8 +123,11 @@ static void * starscape_init (Display *dpy, Window window) {
     /* Get the dimensions of the window */
     st->window_w = st->xgwa.width;
     st->window_h = st->xgwa.height;
-
+    printf("Window height: %d\n", st->xgwa.height);
+    printf("Window width: %d\n", st->xgwa.width);
     st->center_screen.x = st->window_w/2; st->center_screen.y = st->window_h/2;
+    printf("center y: %d\n", st->center_screen.y);
+    printf("center x: %d\n", st->center_screen.x);
 
 
     init_origin(st);
@@ -142,11 +150,9 @@ static void move_stars(struct state * st) {
     XSetForeground(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
     XFillRectangle(st->dpy, st->window, st->gc, 0,0,st->window_w, st->window_h);
     for (i = 0; i < st->star_count; ++i) {
-        /*
-        st->stars[i].location.x += cos(toradians(st->stars[i].direction))*3;
-        st->stars[i].location.y += sin(toradians(st->stars[i].direction))*3;
+        st->stars[i].location.x -= cos(st->stars[i].direction)*(st->stars[i].location.x > st->center_screen.x ? -5 : 5);
+        st->stars[i].location.y -= sin(st->stars[i].direction)*(st->stars[i].location.x > st->center_screen.x ? -5 : 5);
         printf("Star #%d: (%d,%d)\n", i, st->stars[i].location.x, st->stars->location.y);
-         */
     }
 }
 
