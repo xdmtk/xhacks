@@ -36,7 +36,7 @@ struct state {
     XWindowAttributes xgwa;
     Colormap colormap;
     XGCValues gcv;
-    struct star stars[];
+    struct star * stars;
     int window_w, window_h, delay, star_count;
 
 
@@ -44,8 +44,8 @@ struct state {
 
 static void init_origin(struct state * st) {
     /* Setup a square field in the center of the screen as origin for star generation */
-    st->origin.ul.y = st->origin.ur.y = (st->window_h/2)+(int)(st->window_h*.25);
-    st->origin.bl.y = st->origin.br.y = (st->window_h/2)-(int)(st->window_h*.25);
+    st->origin.ul.y = st->origin.ur.y = (st->window_h/2)-(int)(st->window_h*.25);
+    st->origin.bl.y = st->origin.br.y = (st->window_h/2)+(int)(st->window_h*.25);
     st->origin.ul.x = st->origin.bl.x = (st->window_w/2)-(int)(st->window_w*.25);
     st->origin.ur.x = st->origin.br.x = (st->window_w/2)+(int)(st->window_w*.25);
 }
@@ -54,12 +54,19 @@ static void generate_initial_stars(struct state * st) {
     int i, initial_stars = random() % 25;
     st->stars = (struct star *) malloc(sizeof(struct star)*initial_stars);
     assert(st->stars);
+    printf("Origin X Points: (%d, %d)\nOrigin Y Points:(%d, %d)\n", st->origin.ul.x, st->origin.ur.x,
+        st->origin.ul.y, st->origin.bl.y );
     for (i = 0; i < initial_stars; ++i) {
-        struct star s = (struct star *) malloc(sizeof(strucut star)); assert(s);
-        while (((s.location.x = random() % st->origin.ur.x) < st->origin.ul.x)
-               && ((s.location.y = random() % st->origin.bl.y) < st->origin.ul.y))
-            continue;
+        struct star s;
+        s.location.x = random() % st->origin.ur.x; s.location.y = random() % st->origin.bl.y;
+        while (s.location.x < st->origin.ul.x || s.location.y < st->origin.ul.y) {
+            if (s.location.x < st->origin.ul.x)
+                s.location.x = random() % st->origin.ur.x;
+            if (s.location.y < st->origin.ul.y)
+                s.location.y = random() % st->origin.bl.y;
+        }
         st->stars[i] = s;
+        printf("Star location: (%d, %d)\n", st->stars[i].location.x, st->stars[i].location.y);
     }
 }
 
