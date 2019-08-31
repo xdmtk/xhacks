@@ -1,10 +1,10 @@
 .TH XScreenSaver 1 "13-aug-92" "X Version 11"
 .SH NAME
-fibonacci - endless golden rectangles
+starscape - cruising through space among the stars
 .SH SYNOPSIS
 .B fibonacci
 .SH DESCRIPTION
-A very simple screensaver generating a colored set of golden rectangles.
+A very simple screensaver simulating physics of moving through 3d space
 .SH OPTIONS
 .SH SEE ALSO
 .BR X (1),

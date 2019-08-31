@@ -123,7 +123,7 @@ SRCS		= attraction.c blitspin.c bouboule.c braid.c bubbles.c \
 		  asm6502.c abstractile.c lcdscrub.c hexadrop.c \
 		  tessellimage.c delaunay.c recanim.c binaryring.c \
 		  glitchpeg.c vfeedback.c webcollage-cocoa.m \
-		  webcollage-helper-cocoa.m testx11.c
+		  webcollage-helper-cocoa.m testx11.c starscape.c
 SCRIPTS		= vidwhacker webcollage ljlatest
 
 # Programs that are mentioned in XScreenSaver.ad, and that have XML files,
@@ -164,7 +164,7 @@ OBJS		= attraction.o blitspin.o bouboule.o braid.o bubbles.o \
 		  webcollage-cocoa.o webcollage-helper-cocoa.o m6502.o \
 		  asm6502.o abstractile.o lcdscrub.o hexadrop.o \
 		  tessellimage.o delaunay.o recanim.o binaryring.o \
-		  glitchpeg.o vfeedback.o testx11.o
+		  glitchpeg.o vfeedback.o testx11.o starscape.o
 
 EXES		= attraction blitspin bouboule braid decayscreen deco \
 		  drift flame galaxy grav greynetic halo \
@@ -186,7 +186,7 @@ EXES		= attraction blitspin bouboule braid decayscreen deco \
 		  pacman fuzzyflakes anemotaxis memscroller substrate \
 		  intermomentary fireworkx fibonacci fiberlamp boxfit interaggregate \
 		  celtic cwaves m6502 abstractile lcdscrub hexadrop \
-		  tessellimage binaryring glitchpeg vfeedback \
+		  tessellimage binaryring glitchpeg vfeedback starscape \
 		  @JPEG_EXES@
 JPEG_EXES	= webcollage-helper
 
@@ -230,7 +230,7 @@ MEN		= anemone.man apollonian.man attraction.man \
 	          polyominoes.man pyro.man qix.man rd-bomb.man ripples.man \
 	          rocks.man rorschach.man rotzoomer.man \
 	          shadebobs.man sierpinski.man slidescreen.man slip.man \
-	          speedmine.man \
+	          speedmine.man starscape.man \
 	          spotlight.man squiral.man starfish.man strange.man \
 	          swirl.man thornbird.man triangle.man truchet.man \
 	          twang.man vermiculate.man vidwhacker.man \
@@ -1031,6 +1031,9 @@ fiberlamp:	fiberlamp.o	$(XLOCK_OBJS)
 	$(CC_HACK) -o $@ $@.o	$(XLOCK_OBJS) $(HACK_LIBS)
 
 fibonacci:	fibonacci.o	$(XLOCK_OBJS)
+	$(CC_HACK) -o $@ $@.o	$(XLOCK_OBJS) $(HACK_LIBS)
+
+starscape:	starscape.o	$(XLOCK_OBJS)
 	$(CC_HACK) -o $@ $@.o	$(XLOCK_OBJS) $(HACK_LIBS)
 
 # These are not like the others.
@@ -2885,6 +2888,21 @@ starfish.o: $(UTILS_SRC)/spline.h
 starfish.o: $(UTILS_SRC)/usleep.h
 starfish.o: $(UTILS_SRC)/visual.h
 starfish.o: $(UTILS_SRC)/yarandom.h
+starscape.o: ../config.h
+starscape.o: $(srcdir)/fps.h
+starscape.o: $(srcdir)/recanim.h
+starscape.o: $(srcdir)/screenhackI.h
+starscape.o: $(UTILS_SRC)/colors.h
+starscape.o: $(UTILS_SRC)/erase.h
+starscape.o: $(UTILS_SRC)/font-retry.h
+starscape.o: $(UTILS_SRC)/grabscreen.h
+starscape.o: $(UTILS_SRC)/hsv.h
+starscape.o: $(UTILS_SRC)/resources.h
+starscape.o: $(UTILS_SRC)/usleep.h
+starscape.o: $(UTILS_SRC)/visual.h
+starscape.o: $(UTILS_SRC)/yarandom.h
+starscape.o: $(srcdir)/xlockmoreI.h
+starscape.o: $(srcdir)/xlockmore.h
 strange.o: ../config.h
 strange.o: $(srcdir)/fps.h
 strange.o: $(srcdir)/recanim.h
