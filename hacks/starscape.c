@@ -50,6 +50,19 @@ static void init_origin(struct state * st) {
     st->origin.ur.x = st->origin.br.x = (st->window_w/2)+(int)(st->window_w*.25);
 }
 
+static void generate_initial_stars(struct state * st) {
+    int i, initial_stars = random() % 25;
+    st->stars = (struct star *) malloc(sizeof(struct star)*initial_stars);
+    assert(st->stars);
+    for (i = 0; i < initial_stars; ++i) {
+        struct star s = (struct star *) malloc(sizeof(strucut star)); assert(s);
+        while (((s.location.x = random() % st->origin.ur.x) < st->origin.ul.x)
+               && ((s.location.y = random() % st->origin.bl.y) < st->origin.ul.y))
+            continue;
+        st->stars[i] = s;
+    }
+}
+
 static void * starscape_init (Display *dpy, Window window) {
 
     /* Setup state variable */
@@ -79,17 +92,10 @@ static void * starscape_init (Display *dpy, Window window) {
     st->gcv.background = BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy));
 
     st->gc = XCreateGC(st->dpy, st->window, GCForeground | GCBackground, &st->gcv);
+    generate_initial_stars(st);
     return st;
 }
 
-static void generate_initial_stars(struct state * st) {
-    int i, initial_stars = random() % 25;
-    st->stars = malloc(sizeof(struct star)*initial_stars);
-    assert(st->stars);
-
-
-
-}
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
     struct state *st = (struct state *) closure;
