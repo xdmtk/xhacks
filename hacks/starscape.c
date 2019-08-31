@@ -12,6 +12,8 @@
 #include <math.h>
 #include "screenhack.h"
 #include "alpha.h"
+#include "../clion_include/X.h"
+#include "../clion_include/Xlib.h"
 
 #define countof(x) (sizeof(x)/sizeof(*(x)))
 #define ABS(x) ((x)<0?-(x):(x))
@@ -43,7 +45,6 @@ static void init_origin(struct state * st) {
     /* Setup a square field in the center of the screen as origin for star generation */
     st->origin.ul.y = st->origin.ur.y = (st->window_h/2)+(int)(st->window_h*.25);
     st->origin.bl.y = st->origin.br.y = (st->window_h/2)-(int)(st->window_h*.25);
-
     st->origin.ul.x = st->origin->bl.x = (st->window_w/2)-(int)(st->window_w*.25);
     st->origin.ur.x = st->origin->br.x = (st->window_w/2)+(int)(st->window_w*.25);
 }
@@ -81,7 +82,10 @@ static void * starscape_init (Display *dpy, Window window) {
 
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
-    XDrawPoints
+    struct state *st = (struct state *) closure;
+    XDrawLines(st->dpy, st->window, st->gc,
+            {st->origin.bl, st->origin.br, st->origin.ur, st->origin.ul}, 4, CoordModeOrigin);
+
     return st->delay;
 }
 
