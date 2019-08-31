@@ -13,8 +13,6 @@
 #include <assert.h>
 #include "screenhack.h"
 #include "alpha.h"
-#include "../clion_include/X.h"
-#include "../clion_include/Xlib.h"
 
 #define max(a,b) (a>b?a:b)
 #define countof(x) (sizeof(x)/sizeof(*(x)))
