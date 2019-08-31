@@ -13,7 +13,6 @@
 #include "screenhack.h"
 #include "alpha.h"
 
-
 #define countof(x) (sizeof(x)/sizeof(*(x)))
 #define ABS(x) ((x)<0?-(x):(x))
 
@@ -41,15 +40,19 @@ struct state {
 };
 
 static void init_origin(struct state * st) {
-    st->origin.ul.y =
+    /* Setup a square field in the center of the screen as origin for star generation */
+    st->origin.ul.y = st->origin.ur.y = (st->window_h/2)+(int)(st->window_h*.25);
+    st->origin.bl.y = st->origin.br.y = (st->window_h/2)-(int)(st->window_h*.25);
 
+    st->origin.ul.x = st->origin->bl.x = (st->window_w/2)-(int)(st->window_w*.25);
+    st->origin.ur.x = st->origin->br.x = (st->window_w/2)+(int)(st->window_w*.25);
 }
 
 static void * starscape_init (Display *dpy, Window window) {
 
     /* Setup state variable */
     struct state *st = (struct state *) calloc (1, sizeof(*st));
-
+    init_origin(st);
     /* Default display given to us by Xscreensaver */
     st->dpy = dpy;
 
@@ -78,6 +81,7 @@ static void * starscape_init (Display *dpy, Window window) {
 
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
+    XDrawPoints
     return st->delay;
 }
 
