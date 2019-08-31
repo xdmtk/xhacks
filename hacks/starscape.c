@@ -16,6 +16,7 @@
 #include "../clion_include/X.h"
 #include "../clion_include/Xlib.h"
 
+#define max(a,b) (a>b?a:b)
 #define countof(x) (sizeof(x)/sizeof(*(x)))
 #define ABS(x) ((x)<0?-(x):(x))
 struct origin_field{
@@ -44,6 +45,7 @@ struct state {
 };
 
 static void init_origin(struct state * st) {
+
     /* Setup a square field in the center of the screen as origin for star generation */
     st->origin.ul.y = st->origin.ur.y = (st->window_h/2)-(int)(st->window_h*.25);
     st->origin.bl.y = st->origin.br.y = (st->window_h/2)+(int)(st->window_h*.25);
@@ -52,6 +54,10 @@ static void init_origin(struct state * st) {
 }
 
 static int get_brightness_from_origin(struct state * st, int x, int y) {
+
+    /* Using the furthest point from the origin (x or y) we can calculate the percentage of the
+     * offset, and multiply it against the 256 alpha value to get our brightness
+     * The closer to the origin, the darker the star */
     int max_distance = max(ABS(x - st->center_screen.x), ABS(y - st->center_screen.y));
     if (ABS(x - st->center_screen.x) > ABS(y - st->center_screen.y)) {
         return (int)(max_distance/st->center_screen.x)*256;
@@ -60,10 +66,11 @@ static int get_brightness_from_origin(struct state * st, int x, int y) {
 }
 
 static int get_direction_from_origin(struct state * st, int x, int y) {
-
+    return 90;
 }
 
 static void generate_initial_stars(struct state * st) {
+
     /* Generate an initial set of stars and place them in the origin field */
     int i, initial_stars = random() % 100; st->star_count = initial_stars;
     st->stars = (struct star *) malloc(sizeof(struct star)*initial_stars);
@@ -78,8 +85,9 @@ static void generate_initial_stars(struct state * st) {
             if (s.location.y < st->origin.ul.y)
                 s.location.y = random() % st->origin.bl.y;
         }
-        s.direction = get_direction_from_origin(s.location.x, s.location.y);
-        s.brightness = get
+        s.direction = get_direction_from_origin(st, s.location.x, s.location.y);
+        s.brightness = get_brightness_from_origin(st, s.location.x, s.location.y);
+        s.speed = s.brightness; /* Speed is proportional to brightness ( brighter stars will move faster ) */
         st->stars[i] = s;
     }
 }
@@ -105,7 +113,7 @@ static void * starscape_init (Display *dpy, Window window) {
     st->window_w = st->xgwa.width;
     st->window_h = st->xgwa.height;
 
-    center_screen.x = st->window_w/2; center_screen.y = st->window_h/2;
+    st->center_screen.x = st->window_w/2; st->center_screen.y = st->window_h/2;
     init_origin(st);
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
@@ -118,18 +126,22 @@ static void * starscape_init (Display *dpy, Window window) {
     return st;
 }
 
-static void move_stars() {
+static void move_stars(struct state * st) {
 
-
-
-
+    int i;
+    for (i = 0; i < st->star_count; ++i) {
+        XDrawPoint(st->dpy, st->gc, BlackPixelOfScreen(DefaultScreenOfDisplay(st->dpy)), st->stars[i].location.x,
+                st->stars[i].location.y);
+        st->stars[i].location.x += cos(st->stars[i].direction)*3;
+        st->stars[i].location.y += sin(st->stars[i].direction)*3;
+    }
 }
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
     struct state *st = (struct state *) closure;
     int i;
     XSetForeground(st->dpy, st->gc, WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
-
+    move_stars(st);
     for (i = 0; i < st->star_count; ++i)
         XDrawPoint(st->dpy, st->window, st->gc, st->stars[i].location.x, st->stars[i].location.y);
 
@@ -153,7 +165,6 @@ static Bool starscape_event (Display *dpy, Window window, void *closure, XEvent 
 
 static void starscape_free (Display *dpy, Window window, void *closure) {
     struct state *st = (struct state *) closure;
-    int i;
     free (st);
 }
 
