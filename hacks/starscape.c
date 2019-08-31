@@ -38,6 +38,7 @@ struct state {
     XGCValues gcv;
     struct star * stars;
     int window_w, window_h, delay, star_count;
+    XPoint center_screen;
 
 
 };
@@ -50,12 +51,24 @@ static void init_origin(struct state * st) {
     st->origin.ur.x = st->origin.br.x = (st->window_w/2)+(int)(st->window_w*.25);
 }
 
+static int get_brightness_from_origin(struct state * st, int x, int y) {
+    int max_distance = max(ABS(x - st->center_screen.x), ABS(y - st->center_screen.y));
+    if (ABS(x - st->center_screen.x) > ABS(y - st->center_screen.y)) {
+        return (int)(max_distance/st->center_screen.x)*256;
+    }
+    return (int)(max_distance/st->center_screen.y)*256;
+}
+
+static int get_direction_from_origin(struct state * st, int x, int y) {
+
+}
+
 static void generate_initial_stars(struct state * st) {
+    /* Generate an initial set of stars and place them in the origin field */
     int i, initial_stars = random() % 100; st->star_count = initial_stars;
     st->stars = (struct star *) malloc(sizeof(struct star)*initial_stars);
     assert(st->stars);
-    printf("Origin X Points: (%d, %d)\nOrigin Y Points:(%d, %d)\n", st->origin.ul.x, st->origin.ur.x,
-        st->origin.ul.y, st->origin.bl.y );
+
     for (i = 0; i < initial_stars; ++i) {
         struct star s;
         s.location.x = random() % st->origin.ur.x; s.location.y = random() % st->origin.bl.y;
@@ -65,8 +78,9 @@ static void generate_initial_stars(struct state * st) {
             if (s.location.y < st->origin.ul.y)
                 s.location.y = random() % st->origin.bl.y;
         }
+        s.direction = get_direction_from_origin(s.location.x, s.location.y);
+        s.brightness = get
         st->stars[i] = s;
-        printf("Star location: (%d, %d)\n", st->stars[i].location.x, st->stars[i].location.y);
     }
 }
 
@@ -91,6 +105,7 @@ static void * starscape_init (Display *dpy, Window window) {
     st->window_w = st->xgwa.width;
     st->window_h = st->xgwa.height;
 
+    center_screen.x = st->window_w/2; center_screen.y = st->window_h/2;
     init_origin(st);
     /* Setting up the colormap. not exactly sure what this does yet */
     st->colormap = st->xgwa.colormap;
@@ -103,9 +118,12 @@ static void * starscape_init (Display *dpy, Window window) {
     return st;
 }
 
-static void move
+static void move_stars() {
 
 
+
+
+}
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
     struct state *st = (struct state *) closure;
