@@ -51,7 +51,7 @@ static void init_origin(struct state * st) {
 }
 
 static void generate_initial_stars(struct state * st) {
-    int i, initial_stars = random() % 25;
+    int i, initial_stars = random() % 100; st->star_count = initial_stars;
     st->stars = (struct star *) malloc(sizeof(struct star)*initial_stars);
     assert(st->stars);
     printf("Origin X Points: (%d, %d)\nOrigin Y Points:(%d, %d)\n", st->origin.ul.x, st->origin.ur.x,
@@ -103,11 +103,17 @@ static void * starscape_init (Display *dpy, Window window) {
     return st;
 }
 
+static void move
+
+
 
 static unsigned long starscape_draw (Display *dpy, Window window, void *closure) {
     struct state *st = (struct state *) closure;
+    int i;
+    XSetForeground(st->dpy, st->gc, WhitePixelOfScreen(DefaultScreenOfDisplay(st->dpy)));
 
-
+    for (i = 0; i < st->star_count; ++i)
+        XDrawPoint(st->dpy, st->window, st->gc, st->stars[i].location.x, st->stars[i].location.y);
 
     return st->delay;
 }
